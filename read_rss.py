@@ -3,7 +3,6 @@ import time
 from pprint import pprint
 from operator import itemgetter
 import pickle
-from dateutil import tz
 from time import mktime
 from datetime import datetime
 
