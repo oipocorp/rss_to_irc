@@ -1,0 +1,3 @@
+g1;http://g1.globo.com/dynamo/rss2.xml
+gazeta do povo;https://www.gazetadopovo.com.br/feed/rss/mundo.xml
+agencia brasil;http://agenciabrasil.ebc.com.br/rss/ultimasnoticias/feed.xml
