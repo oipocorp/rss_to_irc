@@ -23,7 +23,7 @@ def format_news_item(item):
 
 
 def print_item(item):
-    print(f"{term.bold(item['date'])}: {item['label']}:")
+    print(f"{term.yellow(item['date'])}: {term.yellow(item['label'])}:")
     print(f"\t{term.link(item['link'], item['title'])}\n")
 
 
@@ -43,7 +43,7 @@ def save_hash_list(hash_list):
 def get_news():
     hash_list = load_hash_list()
     agregado = []
-    with open('feeds.txt', 'r') as feed_list_file:
+    with open('files/feeds.txt', 'r') as feed_list_file:
         for config in feed_list_file:
             if config.strip():
                 label, feed = config.strip('\n').split(';')
