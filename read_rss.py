@@ -5,7 +5,10 @@ from operator import itemgetter
 import pickle
 from time import mktime
 from datetime import datetime
+import sys
+import blessed
 
+term = blessed.Terminal()
 
 def get_item_hash(item):
     return ''.join(list(item.values()))
@@ -17,6 +20,12 @@ def time_to_str(published_time):
 
 def format_news_item(item):
     return '{}: {}:\n\t{}\n\t{}\n\n'.format(item['date'], item['label'], item['title'], item['link'])
+
+
+def print_item(item):
+    print('{}: {}:'.format(item['date'], item['label']))
+    print(f"\t{term.link(item['link'], item['title'])}")
+    print('\n')
 
 
 def load_hash_list():
@@ -61,7 +70,8 @@ def get_news():
 try:
     while True:
         for item in sorted(get_news(), key=lambda tup: tup['date']):
-           print(format_news_item(item))
+           print_item(item)
+           sys.stdout.flush()
         time.sleep(30)
 except KeyboardInterrupt:
     pass
