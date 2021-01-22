@@ -23,9 +23,8 @@ def format_news_item(item):
 
 
 def print_item(item):
-    print('{}: {}:'.format(item['date'], item['label']))
-    print(f"\t{term.link(item['link'], item['title'])}")
-    print('\n')
+    print(f"{term.bold(item['date'])}: {item['label']}:")
+    print(f"\t{term.link(item['link'], item['title'])}\n")
 
 
 def load_hash_list():
