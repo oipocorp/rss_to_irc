@@ -23,7 +23,7 @@ def format_news_item(item):
 
 
 def print_item(item):
-    print(f"{term.yellow(item['date'])}: {term.yellow(item['label'])}:")
+    print(f"{term.yellow(item['date'])}: {term.yellow(item['label'].upper())}:")
     print(f"\t{term.link(item['link'], item['title'])}\n")
 
 
@@ -47,7 +47,13 @@ def get_news():
         for config in feed_list_file:
             if config.strip():
                 label, feed = config.strip('\n').split(';')
-                NewsFeed = feedparser.parse(feed)
+                
+                try:
+                    NewsFeed = feedparser.parse(feed)
+                except ConnectionResetError:
+                    print(f"Falha na conexao com {label}")
+                    continue
+
                 for entry in NewsFeed.entries:
                     if entry.published_parsed:
                         item = {'date': time_to_str(entry.published_parsed),
