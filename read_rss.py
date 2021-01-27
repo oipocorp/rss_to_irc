@@ -6,7 +6,6 @@ import blessed
 from tzlocal import get_localzone
 from dateutil import tz
 from datetime import datetime
-from time import mktime
 
 
 term = blessed.Terminal()
@@ -14,10 +13,13 @@ local_tz = get_localzone()
 
 
 def get_item_hash(item):
-    return ''.join([item['date'], item['label'], item['title'], item['link']])
+    return ''.join([str(item['date']),
+                    item['label'],
+                    item['title'],
+                    item['link']])
 
 
-def time_to_str(published_time):
+def adjust_tz(published_time):
 
     utc = datetime(published_time.tm_year,
                    published_time.tm_mon,
@@ -29,7 +31,7 @@ def time_to_str(published_time):
     to_zone = tz.tzlocal()
     utc = utc.replace(tzinfo=from_zone)
     local_dt = utc.astimezone(to_zone)
-    return str(local_dt)
+    return local_dt
 
 
 def format_news_item(item):
@@ -41,7 +43,8 @@ def format_news_item(item):
 
 def print_item(item):
     global term
-    print(f"{term.yellow(item['date'])}: {term.yellow(item['label'].upper())}:")
+    item_str = str(item['date'])+': '+item['label'].upper()+': '
+    print(f"{term.yellow(item_str)}")
     print(f"\t{term.link(item['link'], item['title'])}\n")
 
 
@@ -74,7 +77,7 @@ def get_news():
 
                 for news_item in news_feed.entries:
                     if news_item.published_parsed:
-                        item = {'date': time_to_str(news_item.published_parsed),
+                        item = {'date': adjust_tz(news_item.published_parsed),
                                 'label': label,
                                 'title': news_item['title'],
                                 'link': news_item['link'],
