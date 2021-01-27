@@ -66,9 +66,9 @@ def get_news():
                         item_hash = get_item_hash(item)
                         if feed not in saved_items:
                             saved_items[feed] = {'hash_list': []}
-                            if item_hash not in saved_items[feed]['hash_list']:
-                                agregado.append(item)
-                                saved_items[feed]['hash_list'].append(item_hash)
+                        if item_hash not in saved_items[feed]['hash_list']:
+                            agregado.append(item)
+                            saved_items[feed]['hash_list'].append(item_hash)
 
     dump_saved_items(saved_items)
     return agregado
