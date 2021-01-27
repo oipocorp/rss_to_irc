@@ -3,9 +3,14 @@ import time
 import pickle
 import sys
 import blessed
+from tzlocal import get_localzone
+from dateutil import tz
+from datetime import datetime
+from time import mktime
 
 
 term = blessed.Terminal()
+local_tz = get_localzone()
 
 
 def get_item_hash(item):
@@ -13,7 +18,18 @@ def get_item_hash(item):
 
 
 def time_to_str(published_time):
-    return time.strftime('%Y-%m-%d %H:%M:%S %z', published_time)
+
+    utc = datetime(published_time.tm_year,
+                   published_time.tm_mon,
+                   published_time.tm_mday,
+                   published_time.tm_hour,
+                   published_time.tm_min,
+                   published_time.tm_sec)
+    from_zone = tz.tzutc()
+    to_zone = tz.tzlocal()
+    utc = utc.replace(tzinfo=from_zone)
+    local_dt = utc.astimezone(to_zone)
+    return str(local_dt)
 
 
 def format_news_item(item):
