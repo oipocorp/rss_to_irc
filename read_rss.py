@@ -6,10 +6,31 @@ import blessed
 from tzlocal import get_localzone
 from dateutil import tz
 from datetime import datetime
+from datetime import datetime
+# from feedgen.feed import FeedGenerator
 
 
 term = blessed.Terminal()
 local_tz = get_localzone()
+
+
+# def create_feed():
+#     fg = FeedGenerator()
+#     fg.id('http://lernfunk.de/media/654321')
+#     fg.title('Some Testfeed')
+#     fg.author({'name': 'John Doe', 'email': 'john@example.de'})
+#     fg.link(href='http://example.com', rel='alternate')
+#     fg.logo('http://ex.com/logo.jpg')
+#     fg.subtitle('This is a cool feed!')
+#     fg.link(href='http://larskiesow.de/test.atom', rel='self')
+#     fg.language('en')
+#     return fg
+
+
+def print_log(message):
+    with open('exec.log', '+a') as log_fd:
+        log_fd.write(datetime.now().strftime(r'%Y/%m/%d %H:%M:%S: '))
+        log_fd.write(message.strip('\n')+'\n')
 
 
 def get_item_hash(item):
@@ -42,10 +63,11 @@ def format_news_item(item):
 
 
 def print_item(item):
-    global term
-    item_str = str(item['date'])+': '+item['label'].upper()+': '
-    print(f"{term.yellow(item_str)}")
-    print(f"\t{term.link(item['link'], item['title'])}\n")
+    if item['new']:
+        global term
+        item_str = str(item['date'])+': '+item['label'].upper()+': '
+        print(f"{term.yellow(item_str)}")
+        print(f"\t{term.link(item['link'], item['title'])}\n")
 
 
 def load_saved_items():
@@ -67,38 +89,49 @@ def get_news():
     with open('files/feeds.txt', 'r') as feed_list_file:
         for config in feed_list_file:
             if config.strip():
+                print_log(f'Processando: {config}')
                 label, feed = config.strip('\n').split(';')
 
                 try:
                     news_feed = feedparser.parse(feed)
                 except (ConnectionResetError, TimeoutError):
-                    print(f"Falha na conexao com {label}")
+                    print_log(f"Falha na conexao com {label}")
                     continue
 
                 for news_item in news_feed.entries:
                     if news_item.published_parsed:
-                        item = {'date': adjust_tz(news_item.published_parsed),
-                                'label': label,
-                                'title': news_item['title'],
-                                'link': news_item['link'],
-                                'news_item': news_item}
+                        try:
+                            item = {'date': adjust_tz(news_item.published_parsed),
+                                    'label': label,
+                                    'title': news_item['title'],
+                                    'link': news_item['link'],
+                                    'news_item': news_item,
+                                    'new': False}
+                        except KeyError as e:
+                            print_log('Erro em get_news:')
+                            print_log('news_item', news_item)
+                            print_log(e)
+                            continue
                         item_hash = get_item_hash(item)
                         if feed not in saved_items:
                             saved_items[feed] = {'hash_list': []}
                         if item_hash not in saved_items[feed]['hash_list']:
-                            agregado.append(item)
+                            item['new'] = True
                             saved_items[feed]['hash_list'].append(item_hash)
+                        agregado.append(item)
 
     dump_saved_items(saved_items)
-    return agregado
+    print_log('Gerando lista ordenada.')
+    return sorted(agregado, key=lambda tup: tup['date'])
 
 
 def main():
     try:
         while True:
-            for item in sorted(get_news(), key=lambda tup: tup['date']):
+            for item in get_news():
                 print_item(item)
                 sys.stdout.flush()
+            print_log('Aguardando para proximo refresh.')
             time.sleep(30)
     except KeyboardInterrupt:
         pass
