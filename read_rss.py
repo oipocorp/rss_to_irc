@@ -6,7 +6,6 @@ import blessed
 from tzlocal import get_localzone
 from dateutil import tz
 from datetime import datetime
-from datetime import datetime
 # from feedgen.feed import FeedGenerator
 
 
@@ -28,7 +27,7 @@ local_tz = get_localzone()
 
 
 def print_log(*arg):
-    with open('exec.log', '+a') as log_fd:
+    with open('exec.log', '+a', encoding="utf-8") as log_fd:
         log_fd.write(datetime.now().strftime(r'%Y/%m/%d %H:%M:%S: '))
         for message in arg:
             log_fd.write(str(message).strip('\n')+'\n')
@@ -110,7 +109,7 @@ def get_news():
                                     'new': False}
                         except KeyError as e:
                             print_log('Erro em get_news:')
-                            print_log('news_item', news_item)
+                            print_log('news_item', label, news_item)
                             print_log(e)
                             continue
                         item_hash = get_item_hash(item)
