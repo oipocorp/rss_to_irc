@@ -6,7 +6,7 @@ import blessed
 from tzlocal import get_localzone
 from dateutil import tz
 from datetime import datetime
- # from feedgen.feed import FeedGenerator
+# from feedgen.feed import FeedGenerator
 
 
 term = blessed.Terminal()
@@ -116,9 +116,11 @@ def get_news():
                         item_hash = get_item_hash(item)
                         if feed not in items_to_save:
                             items_to_save[feed] = {'hash_list': []}
+                        items_to_save[feed]['hash_list'].append(item_hash)
+
                         if item_hash not in saved_items[feed]['hash_list']:
                             item['new'] = True
-                            items_to_save[feed]['hash_list'].append(item_hash)
+
                         agregado.append(item)
 
     dump_saved_items(items_to_save)
