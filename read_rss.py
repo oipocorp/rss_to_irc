@@ -83,45 +83,57 @@ def dump_saved_items(saved_items):
         pickle.dump(saved_items, pickle_file)
 
 
-def get_news():
-    saved_items = load_saved_items()
-    items_to_save = {}
-    agregado = []
+def get_feed(label, url):
+    feed = {'label': label, 'url': url, 'news_feed': ''}
+    try:
+        feed['news_feed'] = feedparser.parse(url)
+    except (ConnectionResetError, TimeoutError):
+        print_log(f"Falha na conexao com {label}")
+    return feed
+
+
+def get_feeds_list():
     with open('files/feeds.txt', 'r') as feed_list_file:
         for config in feed_list_file:
             if config.strip():
                 print_log(f'Processando: {config}')
-                label, feed = config.strip('\n').split(';')
+                label, url = config.strip('\n').split(';')
+                yield label, url
 
+
+def get_news():
+    saved_items = load_saved_items()
+    items_to_save = {}
+    agregado = []
+
+    for label, url in get_feeds_list():
+        feed = get_feed(label, url)
+
+        for news_item in feed['news_feed'].entries:
+            if news_item.published_parsed:
                 try:
-                    news_feed = feedparser.parse(feed)
-                except (ConnectionResetError, TimeoutError):
-                    print_log(f"Falha na conexao com {label}")
+                    item = {'date': adjust_tz(news_item.published_parsed),
+                            'label': label,
+                            'title': news_item['title'],
+                            'link': news_item['link'],
+                            'news_item': news_item,
+                            'new': False}
+                except KeyError as e:
+                    print_log('Erro em get_news:')
+                    print_log('news_item', label, news_item)
+                    print_log(e)
                     continue
 
-                for news_item in news_feed.entries:
-                    if news_item.published_parsed:
-                        try:
-                            item = {'date': adjust_tz(news_item.published_parsed),
-                                    'label': label,
-                                    'title': news_item['title'],
-                                    'link': news_item['link'],
-                                    'news_item': news_item,
-                                    'new': False}
-                        except KeyError as e:
-                            print_log('Erro em get_news:')
-                            print_log('news_item', label, news_item)
-                            print_log(e)
-                            continue
-                        item_hash = get_item_hash(item)
-                        if feed not in items_to_save:
-                            items_to_save[feed] = {'hash_list': []}
-                        items_to_save[feed]['hash_list'].append(item_hash)
+                item_hash = get_item_hash(item)
 
-                        if item_hash not in saved_items[feed]['hash_list']:
-                            item['new'] = True
+                if url not in items_to_save:
+                    items_to_save[url] = {'hash_list': []}
+                items_to_save[url]['hash_list'].append(item_hash)
 
-                        agregado.append(item)
+                if item_hash not in saved_items[url]['hash_list']:
+                    item['new'] = True
+
+                agregado.append(item)
 
     dump_saved_items(items_to_save)
     print_log('Gerando lista ordenada.')
