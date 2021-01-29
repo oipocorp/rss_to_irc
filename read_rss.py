@@ -27,10 +27,11 @@ local_tz = get_localzone()
 #     return fg
 
 
-def print_log(message):
+def print_log(*arg):
     with open('exec.log', '+a') as log_fd:
         log_fd.write(datetime.now().strftime(r'%Y/%m/%d %H:%M:%S: '))
-        log_fd.write(message.strip('\n')+'\n')
+        for message in arg:
+            log_fd.write(str(message).strip('\n')+'\n')
 
 
 def get_item_hash(item):
