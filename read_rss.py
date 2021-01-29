@@ -6,7 +6,7 @@ import blessed
 from tzlocal import get_localzone
 from dateutil import tz
 from datetime import datetime
-# from feedgen.feed import FeedGenerator
+ # from feedgen.feed import FeedGenerator
 
 
 term = blessed.Terminal()
@@ -85,6 +85,7 @@ def dump_saved_items(saved_items):
 
 def get_news():
     saved_items = load_saved_items()
+    items_to_save = {}
     agregado = []
     with open('files/feeds.txt', 'r') as feed_list_file:
         for config in feed_list_file:
@@ -113,14 +114,14 @@ def get_news():
                             print_log(e)
                             continue
                         item_hash = get_item_hash(item)
-                        if feed not in saved_items:
-                            saved_items[feed] = {'hash_list': []}
+                        if feed not in items_to_save:
+                            items_to_save[feed] = {'hash_list': []}
                         if item_hash not in saved_items[feed]['hash_list']:
                             item['new'] = True
-                            saved_items[feed]['hash_list'].append(item_hash)
+                            items_to_save[feed]['hash_list'].append(item_hash)
                         agregado.append(item)
 
-    dump_saved_items(saved_items)
+    dump_saved_items(items_to_save)
     print_log('Gerando lista ordenada.')
     return sorted(agregado, key=lambda tup: tup['date'])
 
