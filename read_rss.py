@@ -6,7 +6,7 @@ import blessed
 from tzlocal import get_localzone
 from dateutil import tz
 from datetime import datetime
-import urllib.request
+from urllib.request import Request, urlopen
 
 
 term = blessed.Terminal()
@@ -15,8 +15,8 @@ local_tz = get_localzone()
 
 def get_feed_url(url):
     try:
-        with urllib.request.urlopen(url) as f:
-            return f.read().decode('utf-8')
+        req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        return urlopen(req).read()
     except Exception as e:
         print_log(e)
         return None
