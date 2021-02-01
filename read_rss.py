@@ -6,24 +6,20 @@ import blessed
 from tzlocal import get_localzone
 from dateutil import tz
 from datetime import datetime
-# from feedgen.feed import FeedGenerator
+import urllib.request
 
 
 term = blessed.Terminal()
 local_tz = get_localzone()
 
 
-# def create_feed():
-#     fg = FeedGenerator()
-#     fg.id('http://lernfunk.de/media/654321')
-#     fg.title('Some Testfeed')
-#     fg.author({'name': 'John Doe', 'email': 'john@example.de'})
-#     fg.link(href='http://example.com', rel='alternate')
-#     fg.logo('http://ex.com/logo.jpg')
-#     fg.subtitle('This is a cool feed!')
-#     fg.link(href='http://larskiesow.de/test.atom', rel='self')
-#     fg.language('en')
-#     return fg
+def get_feed_url(url):
+    try:
+        with urllib.request.urlopen(url) as f:
+            return f.read().decode('utf-8')
+    except Exception as e:
+        print(e)
+        return None
 
 
 def print_log(*arg):
@@ -86,7 +82,11 @@ def dump_saved_items(saved_items):
 def get_feed(label, url):
     feed = {'label': label, 'url': url, 'news_feed': ''}
     try:
-        feed['news_feed'] = feedparser.parse(url)
+        content = get_feed_url(url)
+        if content:
+            feed['news_feed'] = feedparser.parse(content)
+        else:
+            return None
     except (ConnectionResetError, TimeoutError):
         print_log(f"Falha na conexao com {label}")
     return feed
@@ -101,6 +101,25 @@ def get_feeds_list():
                 yield label, url
 
 
+def get_items_from_feed(feed):
+    for news_item in feed['news_feed'].entries:
+        if news_item.published_parsed:
+            try:
+                item = {'date': adjust_tz(news_item.published_parsed),
+                        'label': feed['label'],
+                        'title': news_item['title'],
+                        'link': news_item['link'],
+                        'news_item': news_item,
+                        'new': False}
+            except KeyError as e:
+                print_log('Erro em get_news:')
+                print_log('news_item', feed['label'], news_item)
+                print_log(e)
+                continue
+
+            yield item
+
+
 def get_news():
     saved_items = load_saved_items()
     items_to_save = {}
@@ -108,22 +127,8 @@ def get_news():
 
     for label, url in get_feeds_list():
         feed = get_feed(label, url)
-
-        for news_item in feed['news_feed'].entries:
-            if news_item.published_parsed:
-                try:
-                    item = {'date': adjust_tz(news_item.published_parsed),
-                            'label': label,
-                            'title': news_item['title'],
-                            'link': news_item['link'],
-                            'news_item': news_item,
-                            'new': False}
-                except KeyError as e:
-                    print_log('Erro em get_news:')
-                    print_log('news_item', label, news_item)
-                    print_log(e)
-                    continue
-
+        if feed:
+            for item in get_items_from_feed(feed):
                 item_hash = get_item_hash(item)
 
                 if url not in items_to_save:
