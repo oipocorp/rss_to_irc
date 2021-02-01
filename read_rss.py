@@ -18,7 +18,7 @@ def get_feed_url(url):
         with urllib.request.urlopen(url) as f:
             return f.read().decode('utf-8')
     except Exception as e:
-        print(e)
+        print_log(e)
         return None
 
 
