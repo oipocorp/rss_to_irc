@@ -131,12 +131,14 @@ def get_news():
             for item in get_items_from_feed(feed):
                 item_hash = get_item_hash(item)
 
+                if url not in saved_items:
+                    item['new'] = True
+                elif item_hash not in saved_items[url]['hash_list']:
+                    item['new'] = True
+
                 if url not in items_to_save:
                     items_to_save[url] = {'hash_list': []}
                 items_to_save[url]['hash_list'].append(item_hash)
-
-                if item_hash not in saved_items[url]['hash_list']:
-                    item['new'] = True
 
                 agregado.append(item)
 
